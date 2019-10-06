@@ -17,7 +17,10 @@ def main():
 	robot = Robot()
 	gtgCtrl = gtgFuzzyController()
 
-	finish = np.array([3.2, -1.5])
+	#finish = np.array([3.2, -1.5])
+	#finish = np.array([0.0, 2.0]) 
+	#finish = np.array([0.0, 0.0])
+	finish = np.array([3.0, 2.0])
 
 	while(robot.get_connection_status() != -1):
 
@@ -32,10 +35,24 @@ def main():
 		dx, dy = finish - robot_pos
 		alpha = np.arctan(dy/dx)
 
-		errorAngle = theta - alpha
+		if finish[0] >= robot_pos[0] and finish[1] <= robot_pos[1]:
+			errorAngle = theta - alpha
+
+		elif finish[0] <= robot_pos[0] and finish[1] >= robot_pos[1]:
+			errorAngle = theta - (np.pi + alpha)
+
+		elif finish[0] <= robot_pos[0] and finish[1] <= robot_pos[1]:
+			errorAngle = theta - alpha + np.pi
+
+		elif finish[0] >= robot_pos[0] and finish[1] >= robot_pos[1]:
+			errorAngle = theta - alpha
+
+
 		errorDistance = np.sqrt((dx**2 + dy**2)) 
 
+		print(errorAngle, errorDistance)
 		vel = gtgCtrl.computeVelocity(errorDistance, errorAngle)
+		
 
 		if abs(errorAngle) <= 0.1:
 			robot.set_left_velocity(vel)
