@@ -1,0 +1,21 @@
+### Python
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+/bin/*
+/output/*
+.pylintrc
+.vscode/*
+# Report temporary file
+*.fls
+*.log
+*.fdb_latexmk
+*.aux
+*.synctex.gz
+# Env files
+Pipfile*
+# Vim temprary files
+*.swp
+*.swo
