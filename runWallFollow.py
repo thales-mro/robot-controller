@@ -14,7 +14,7 @@ def main():
 
     while robot.get_connection_status() != -1:
         dist = robot.read_ultrassonic_sensors()
-        velocities = controller.control(dist[8])
+        velocities = controller.control(dist[8], 'right')
         robot.set_left_velocity(velocities[0])
         robot.set_right_velocity(velocities[1])
         if dist[8] != 5.0:
