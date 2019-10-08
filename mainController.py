@@ -18,6 +18,7 @@ def main():
 	robot = Robot()
 	avoidObsCtrl = avoidObstacleFuzzyController(robot)
 	half = 684//2
+	half_section = 21//2
 	mode = 0
 
 	if(robot.get_connection_status() != -1):
@@ -31,13 +32,19 @@ def main():
 
 		r, theta = avoidObsCtrl.getInputValues(ir_distances)
 
-		detection_range = r[half-100:half+100]
+		detection_range = r[half-35:half+35]
 		min_dist = np.min(detection_range)
+
+		r1 = r[::11][:21][half_section-3:half_section+3]
+		r2 = r[::11][21:42][half_section-3:half_section+3]
+		r3 = r[::11][42:][half_section-3:half_section+3]
+
+		r_downsampled = np.concatenate((r1, r2, r3))
 
 		if mode == 0:
 			if min_dist <= 1.0:
 				mode = 1
-				velLeft, velRight = avoidObsCtrl.getVelocities(r[::11])
+				velLeft, velRight = avoidObsCtrl.getVelocities(r_downsampled)
 				print(velLeft, velRight)
 				robot.set_left_velocity(velLeft)
 				robot.set_right_velocity(velRight)
@@ -55,7 +62,7 @@ def main():
 				robot.set_right_velocity(2.0)
 
 			else:
-				velLeft, velRight = avoidObsCtrl.getVelocities(r[::11])
+				velLeft, velRight = avoidObsCtrl.getVelocities(r_downsampled)
 				print(velLeft, velRight)
 				robot.set_left_velocity(velLeft)
 				robot.set_right_velocity(velRight)
