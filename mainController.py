@@ -17,26 +17,60 @@ def main():
 
 	robot = Robot()
 	avoidObsCtrl = avoidObstacleFuzzyController(robot)
-	
+	half = 684//2
+	mode = 0
+
+	if(robot.get_connection_status() != -1):
+		pos_ref = np.array(robot.get_current_position())[:2]
+
 	while(robot.get_connection_status() != -1):
+
 
 		ir_distances = robot.read_laser()
 		ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
 		
 		r, theta = avoidObsCtrl.getInputValues(ir_distances)
-		theta = theta[::11]
-		r = r[::11]
 
-	
-		vel_left, vel_right = avoidObsCtrl.getVelocities(r)
-		print(r[:21])
-		print(vel_left, vel_right)
-		robot.set_left_velocity(vel_left)
-		robot.set_right_velocity(vel_right)
+		if mode == 0:
+			detection_range = r[half-100:half+100]
+			min_dist = np.min(detection_range)
 
-		time.sleep(0.2)
+			if min_dist <= 0.5:
+				mode = 1
+				pos0 = np.array(robot.get_current_position())[:2]
+				vecRef = pos0 - pos_ref
 
+				robot.set_left_velocity(0.0)
+				robot.set_right_velocity(2.0)
+
+			else:
+				robot.set_left_velocity(2.0)
+				robot.set_right_velocity(2.0)
+
+		elif mode == 1:
+
+			theta = theta[::11]
+			r = r[::11]
+			vel_left, vel_right = avoidObsCtrl.getVelocities(r)
+			
+			robot.set_left_velocity(vel_left)
+			robot.set_right_velocity(vel_right)
+
+			time.sleep(0.1)
+
+			pos1 = np.array(robot.get_current_position())[:2]
+			vecActual = pos1 - pos0
+
+			theta = np.arccos(np.sum(vecRef*vecActual)/(norm(vecRef)*norm(vecActual)))
+
+			if theta < 0.01:
+				mode = 0
+				robot.set_left_velocity(0.0)
+				robot.set_right_velocity(2.0)
+
+		
+		print(mode)
 
 
 		#for i in range(len(theta)-1):

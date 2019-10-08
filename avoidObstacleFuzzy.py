@@ -2,6 +2,7 @@ import numpy as np
 from numpy.linalg import norm
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
+import matplotlib.pyplot as plt
 
 
 class avoidObstacleFuzzyController():
@@ -11,39 +12,43 @@ class avoidObstacleFuzzyController():
 		self.robot = robot
 
 		
-		velocityRight = ctrl.Consequent(np.arange(0, 5, 1), 'velocity right')
-		velocityLeft = ctrl.Consequent(np.arange(0, 5, 1), 'velocity left')
+		velocityRight = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity right')
+		velocityLeft = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity left')
 
 		velocityRight['very slow'] = fuzz.trimf(velocityRight.universe, [0.0, 0.0, 0.5])
-		velocityRight['slow'] = fuzz.trimf(velocityRight.universe, [0.4, 0.7, 1.0])
-		velocityRight['medium'] = fuzz.trimf(velocityRight.universe, [0.85, 1.5, 2.0])
-		velocityRight['fast'] = fuzz.trimf(velocityRight.universe, [1.75, 2.5, 3.0])
-		velocityRight['very fast'] = fuzz.trimf(velocityRight.universe, [2.75, 3.5, 3.5])
+		velocityRight['slow'] = fuzz.trimf(velocityRight.universe, [0.5, 1.0, 1.5])
+		velocityRight['medium'] = fuzz.trimf(velocityRight.universe, [1.5, 2.0, 2.5])
+		velocityRight['fast'] = fuzz.trimf(velocityRight.universe, [2.5, 3.0, 3.5])
+		velocityRight['very fast'] = fuzz.trimf(velocityRight.universe, [3.5, 4.0, 4.5])
+
+		#x = fuzz.trimf(velocityRight.universe, [0.4, 0.7, 1.0]) 
+		#plt.plot(velocityRight.universe, x, 'b.')
+		#plt.show()
 
 		velocityLeft['very slow'] = fuzz.trimf(velocityLeft.universe, [0.0, 0.0, 0.5])
-		velocityLeft['slow'] = fuzz.trimf(velocityLeft.universe, [0.4, 0.7, 1.0])
-		velocityLeft['medium'] = fuzz.trimf(velocityLeft.universe, [0.85, 1.5, 2.0])
-		velocityLeft['fast'] = fuzz.trimf(velocityLeft.universe, [1.75, 2.5, 3.0])
-		velocityLeft['very fast'] = fuzz.trimf(velocityLeft.universe, [2.75, 3.5, 3.5])
+		velocityLeft['slow'] = fuzz.trimf(velocityLeft.universe, [0.5, 1.0, 1.5])
+		velocityLeft['medium'] = fuzz.trimf(velocityLeft.universe, [1.5, 2.0, 2.5])
+		velocityLeft['fast'] = fuzz.trimf(velocityLeft.universe, [2.5, 3.0, 3.5])
+		velocityLeft['very fast'] = fuzz.trimf(velocityLeft.universe, [3.5, 4.0, 4.5])
 
 		# East Sector
 		section_split = 63//3
 
 		rulesSectorEast = [[],[]]
 		for beacon_number in range(0, section_split):
-			beacon = ctrl.Antecedent(np.arange(0, 7, 1), ('distance_beacon%d' % beacon_number))
+			beacon = ctrl.Antecedent(np.arange(0, 7, 0.1), ('distance_beacon%d' % beacon_number))
 			
-			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.7])
-			beacon['medium'] = fuzz.trimf(beacon.universe, [0.5, 1.0, 1.5])
-			beacon['far'] = fuzz.trapmf(beacon.universe, [1.2, 2.0, 5.0, 5.0])
+			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.3])
+			beacon['medium'] = fuzz.trimf(beacon.universe, [0.3, 0.5, 0.7])
+			beacon['far'] = fuzz.trapmf(beacon.universe, [0.7, 1.0, 5.5, 5.5])
 
 
 			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['fast'])
 			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['medium'])
-			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['slow'])
+			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['medium'])
 			rulesSectorEast[0] += [rule01_left, rule02_left, rule03_left]
 
-			rule01_right = ctrl.Rule(beacon['far'], velocityRight['slow'])
+			rule01_right = ctrl.Rule(beacon['far'], velocityRight['medium'])
 			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['medium'])
 			rule03_right = ctrl.Rule(beacon['close'], velocityRight['fast'])
 			rulesSectorEast[1] += [rule01_right, rule02_right, rule03_right]
@@ -93,7 +98,7 @@ class avoidObstacleFuzzyController():
 
 		'''
 
-		print(rulesSectorEast[0])
+		
 		velocityLeftRules = rulesSectorEast[0] #+ rulesSectorNorth[0] + rulesSectorWest[0]
 		velocityRightRules = rulesSectorEast[1] #+ rulesSectorNorth[1] + rulesSectorWest[1]
 
