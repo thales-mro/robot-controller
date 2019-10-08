@@ -29,50 +29,38 @@ def main():
 		ir_distances = robot.read_laser()
 		ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
-		
 		r, theta = avoidObsCtrl.getInputValues(ir_distances)
 
-		'''
+		detection_range = r[half-100:half+100]
+		min_dist = np.min(detection_range)
+
 		if mode == 0:
-			detection_range = r[half-100:half+100]
-			min_dist = np.min(detection_range)
-
-			if min_dist <= 0.5:
+			if min_dist <= 1.0:
 				mode = 1
-				pos0 = np.array(robot.get_current_position())[:2]
-				vecRef = pos0 - pos_ref
+				velLeft, velRight = avoidObsCtrl.getVelocities(r[::11])
+				print(velLeft, velRight)
+				robot.set_left_velocity(velLeft)
+				robot.set_right_velocity(velRight)
 
-				robot.set_left_velocity(0.0)
+			else:
+
+				robot.set_left_velocity(2.0)
+				robot.set_right_velocity(2.0)
+
+
+		elif mode == 1:
+			if min_dist >= 1.0:
+				mode = 0
+				robot.set_left_velocity(2.0)
 				robot.set_right_velocity(2.0)
 
 			else:
-				robot.set_left_velocity(2.0)
-				robot.set_right_velocity(2.0)
-		'''
-		#elif mode == 1:
-
-		theta = theta[::11]
-		r = r[::11]
-		vel_left, vel_right = avoidObsCtrl.getVelocities(r)
+				velLeft, velRight = avoidObsCtrl.getVelocities(r[::11])
+				print(velLeft, velRight)
+				robot.set_left_velocity(velLeft)
+				robot.set_right_velocity(velRight)
 		
-		robot.set_left_velocity(vel_left)
-		robot.set_right_velocity(vel_right)
-
-		time.sleep(0.1)
-
-		'''
-		pos1 = np.array(robot.get_current_position())[:2]
-		vecActual = pos1 - pos0
-
-		theta = np.arccos(np.sum(vecRef*vecActual)/(norm(vecRef)*norm(vecActual)))
-
-		if theta < 0.01:
-			mode = 0
-			robot.set_left_velocity(0.0)
-			robot.set_right_velocity(2.0)
-
 		
-		print(mode)
 		'''
 
 		#for i in range(len(theta)-1):
@@ -90,7 +78,7 @@ def main():
 		#plt.plot(-1*x[sec:2*sec], -1*y[sec:2*sec], 'b.')
 		#plt.plot(-1*x[2*sec:], -1*y[2*sec:], 'g.')
 		#plt.show()
-	
+		'''
 
 		
 		

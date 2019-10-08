@@ -38,69 +38,72 @@ class avoidObstacleFuzzyController():
 		for beacon_number in range(0, section_split):
 			beacon = ctrl.Antecedent(np.arange(0, 7, 0.1), ('distance_beacon%d' % beacon_number))
 			
-			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.3])
-			beacon['medium'] = fuzz.trimf(beacon.universe, [0.3, 0.5, 0.7])
-			beacon['far'] = fuzz.trapmf(beacon.universe, [0.7, 1.0, 5.5, 5.5])
+			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.7])
+			beacon['medium'] = fuzz.trimf(beacon.universe, [0.5, 1.0, 1.5])
+			beacon['far'] = fuzz.trapmf(beacon.universe, [1.5, 2.0, 5.5, 5.5])
 
 
-			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['fast'])
-			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['medium'])
-			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['medium'])
+			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['very fast'])
+			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['fast'])
+			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['slow'])
 			rulesSectorEast[0] += [rule01_left, rule02_left, rule03_left]
 
-			rule01_right = ctrl.Rule(beacon['far'], velocityRight['medium'])
-			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['medium'])
-			rule03_right = ctrl.Rule(beacon['close'], velocityRight['fast'])
+			rule01_right = ctrl.Rule(beacon['far'], velocityRight['slow'])
+			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['slow'])
+			rule03_right = ctrl.Rule(beacon['close'], velocityRight['very fast'])
 			rulesSectorEast[1] += [rule01_right, rule02_right, rule03_right]
 
-		'''
+		
 		# North Sector 
 		rulesSectorNorth = [[],[]]
 		for beacon_number in range(section_split, 2*section_split):
-			beacon = ctrl.Antecedent(np.arange(0, 3, 1), ('distance_beacon%d' % beacon_number))
+			beacon = ctrl.Antecedent(np.arange(0, 7, 0.1), ('distance_beacon%d' % beacon_number))
 			
 			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.7])
 			beacon['medium'] = fuzz.trimf(beacon.universe, [0.5, 1.0, 1.5])
-			beacon['far'] = fuzz.trimf(beacon.universe, [1.2, 2.0, 2.0])
+			beacon['far'] = fuzz.trapmf(beacon.universe, [1.5, 2.0, 5.5, 5.5])
 
 
-			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['fast'])
-			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['slow'])
-			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['medium'])
-			rulesSectorNorth[0] += [rule01_left, rule02_left, rule03_left]
+			#rule01_left = ctrl.Rule(beacon['far'], velocityLeft['fast'])
+			#rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['slow'])
+			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['very slow'])
+			#rulesSectorNorth[0] += [rule01_left, rule02_left, rule03_left]
+			rulesSectorNorth[0] += [rule03_left]
 
 
-			rule01_right = ctrl.Rule(beacon['far'], velocityRight['fast'])
-			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['medium'])
-			rule03_right = ctrl.Rule(beacon['close'], velocityRight['fast'])
-			rulesSectorNorth[1] += [rule01_right, rule02_right, rule03_right]
+			#rule01_right = ctrl.Rule(beacon['far'], velocityRight['fast'])
+			#rule02_right = ctrl.Rule(beacon['medium'], velocityRight['slow'])
+			rule03_right = ctrl.Rule(beacon['close'], velocityRight['very slow'])
+			rulesSectorNorth[1] += [rule03_right]
 
 		# West Sector
 		rulesSectorWest = [[],[]]
 		for beacon_number in range(2*section_split, 3*section_split):
-			beacon = ctrl.Antecedent(np.arange(0, 3, 1), ('distance_beacon%d' % beacon_number))
+			beacon = ctrl.Antecedent(np.arange(0, 7, 0.1), ('distance_beacon%d' % beacon_number))
 			
 			beacon['close'] = fuzz.trimf(beacon.universe, [0.0, 0.0, 0.7])
 			beacon['medium'] = fuzz.trimf(beacon.universe, [0.5, 1.0, 1.5])
-			beacon['far'] = fuzz.trimf(beacon.universe, [1.2, 2.0, 2.0])
+			beacon['far'] = fuzz.trapmf(beacon.universe, [1.5, 2.0, 5.5, 5.5])
+
+			#rule01_left = ctrl.Rule(beacon['far'], velocityLeft['very fast'])
+			#rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['fast'])
+			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['medium'])
+			#rulesSectorWest[0] += [rule01_left, rule02_left, rule03_left]
+			rulesSectorWest[0] += [rule03_left]
 
 
-			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['fast'])
-			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['fast'])
-			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['fast'])
-			rulesSectorWest[0] += [rule01_left, rule02_left, rule03_left]
 
-
-			rule01_right = ctrl.Rule(beacon['far'], velocityRight['fast'])
-			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['medium'])
-			rule03_right = ctrl.Rule(beacon['close'], velocityRight['slow'])
-			rulesSectorWest[1] += [rule01_right, rule02_right, rule03_right]
-
-		'''
+			#rule01_right = ctrl.Rule(beacon['far'], velocityRight['very fast'])
+			#rule02_right = ctrl.Rule(beacon['medium'], velocityRight['slow'])
+			rule03_right = ctrl.Rule(beacon['close'], velocityRight['very slow'])
+			#rulesSectorWest[1] += [rule01_right, rule02_right, rule03_right]
+			rulesSectorWest[1] += [rule03_right]
 
 		
-		velocityLeftRules = rulesSectorEast[0] #+ rulesSectorNorth[0] + rulesSectorWest[0]
-		velocityRightRules = rulesSectorEast[1] #+ rulesSectorNorth[1] + rulesSectorWest[1]
+
+		
+		velocityLeftRules = rulesSectorEast[0] + rulesSectorNorth[0] + rulesSectorWest[0]
+		velocityRightRules = rulesSectorEast[1] + rulesSectorNorth[1] + rulesSectorWest[1]
 
 		print("before Left Control")
 		velLeftCtrl = ctrl.ControlSystem(velocityLeftRules)
@@ -113,7 +116,7 @@ class avoidObstacleFuzzyController():
 
 	def getVelocities(self, distances):
 
-		for beacon_number in range(21):
+		for beacon_number in range(63):
 			self.velLeftCtrlSimulation.input[('distance_beacon%d' % beacon_number)] = distances[beacon_number]
 			self.velRightCtrlSimulation.input[('distance_beacon%d' % beacon_number)] = distances[beacon_number]
 			
