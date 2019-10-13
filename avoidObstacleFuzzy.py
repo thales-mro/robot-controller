@@ -10,6 +10,7 @@ class avoidObstacleFuzzyController():
 
 	def __init__(self, robot):
 		self.robot = robot
+		self.defined_finish = None
 
 		
 		velocityRight = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity right')
@@ -118,6 +119,61 @@ class avoidObstacleFuzzyController():
 			inputToSystem[index_of_angle] = norm(vecs[index])
 
 		return inputToSystem, stored_angles
+
+	def run(self):
+
+		half = 684//2
+		half_section = 21//2
+		threshold = np.pi/2
+		
+		if(self.robot.get_connection_status() != -1):
+			angle_ref = np.array(self.robot.get_current_orientation())[-1]
+
+		while(self.robot.get_connection_status() != -1):
+
+
+			ir_distances = self.robot.read_laser()
+			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
+
+			r, theta = self.getInputValues(ir_distances)
+
+			detection_range = r[half-60:half+60]
+			min_dist = np.min(detection_range)
+
+			if min_dist <= 1.5:
+				r1 = r[::11][:21][half_section-3:half_section+3]
+				r2 = r[::11][21:42][half_section-3:half_section+3]
+				r3 = r[::11][42:][half_section-3:half_section+3]
+
+				r_downsampled = np.concatenate((r1, r2, r3))
+
+				
+				velLeft, velRight = self.getVelocities(r_downsampled)
+				#print(velLeft, velRight)
+				self.robot.set_left_velocity(velLeft)
+				self.robot.set_right_velocity(velRight)
+
+			else:
+				angle_final = np.array(self.robot.get_current_orientation())[-1]
+				actual_pos = np.array(self.robot.get_current_position())[:2]
+
+				r = 1.5
+				dtheta = abs(angle_final - angle_ref)
+
+				self.defined_finish = np.array([[r*np.cos(angle_final) + actual_pos[0], r*np.sin(angle_final) + actual_pos[1]]])
+				
+
+				if dtheta < threshold:
+					return 1
+				else:
+					return 3
+
+
+	def getDefinedFinish(self):
+		return self.defined_finish
+
+
+				
 
 	
 
