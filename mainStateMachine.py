@@ -33,7 +33,7 @@ def main():
 		# this first 'if' is only used to map the first state
 		# it's redundat and a dummy one, only used as start point
 		if state == 0:
-			state = gtgCtrl.run(finishes[-1])
+			state = gtgCtrl.run(finishes[-1], True)
 
 			if state == 1:
 				finishes = np.delete(finishes, -1, axis=0)
@@ -41,7 +41,11 @@ def main():
 			print(state, finishes)
 		elif state == 1:
 			if len(finishes) > 0:
-				state = gtgCtrl.run(finishes[-1])
+
+				if len(finishes) == 1:
+					state = gtgCtrl.run(finishes[-1], True)
+				else:
+					state = gtgCtrl.run(finishes[-1], False)
 
 				if state == 1:
 					finishes = np.delete(finishes, -1, axis=0)

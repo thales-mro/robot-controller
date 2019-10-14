@@ -32,7 +32,7 @@ class avoidObstacleFuzzyController():
 
 		# East Sector
 		#section_split = 63//3
-		self.section_split = 6
+		self.section_split = 14
 
 		rulesSectorEast = [[],[]]
 		for beacon_number in range(0, self.section_split):
@@ -88,7 +88,7 @@ class avoidObstacleFuzzyController():
 
 	def getVelocities(self, distances):
 
-		for beacon_number in range(6):
+		for beacon_number in range(14):
 			self.velLeftCtrlSimulation.input[('distance_beacon%d' % beacon_number)] = distances[beacon_number]
 			self.velRightCtrlSimulation.input[('distance_beacon%d' % beacon_number)] = distances[beacon_number]
 			
@@ -137,13 +137,13 @@ class avoidObstacleFuzzyController():
 
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-60:half+60]
+			detection_range = r[half-90:half+90]
 			min_dist = np.min(detection_range)
 
 			if min_dist <= 1.5:
-				r1 = r[::11][:21][half_section-3:half_section+3]
-				r2 = r[::11][21:42][half_section-3:half_section+3]
-				r3 = r[::11][42:][half_section-3:half_section+3]
+				r1 = r[::11][:21][half_section-7:half_section+7]
+				r2 = r[::11][21:42][half_section-7:half_section+7]
+				r3 = r[::11][42:][half_section-7:half_section+7]
 
 				r_downsampled = np.concatenate((r1, r2, r3))
 
@@ -157,7 +157,7 @@ class avoidObstacleFuzzyController():
 				angle_final = np.array(self.robot.get_current_orientation())[-1]
 				actual_pos = np.array(self.robot.get_current_position())[:2]
 
-				r = 1.5
+				r = 0.7
 				dtheta = abs(angle_final - angle_ref)
 
 				self.defined_finish = np.array([[r*np.cos(angle_final) + actual_pos[0], r*np.sin(angle_final) + actual_pos[1]]])
