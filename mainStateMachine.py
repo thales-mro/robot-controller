@@ -6,7 +6,7 @@ import numpy as np
 from numpy.linalg import norm
 import time
 
-from avoidObstacleFuzzy import avoidObstacleFuzzyController
+from avoidObstacleFuzzy02 import avoidObstacleFuzzyController
 from gtgFuzzy import gtgFuzzyController
 
 #### ---- Mapping of states ---- ####
@@ -29,7 +29,7 @@ def main():
 
 	state = 0
 	while state != 4:
-		print(state)
+		#print(state)
 		# this first 'if' is only used to map the first state
 		# it's redundat and a dummy one, only used as start point
 		if state == 0:
@@ -44,11 +44,16 @@ def main():
 
 				if len(finishes) == 1:
 					state = gtgCtrl.run(finishes[-1], True)
+
+					if state == 1:
+						finishes = np.delete(finishes, -1, axis=0)
+						
 				else:
 					state = gtgCtrl.run(finishes[-1], False)
-
-				if state == 1:
 					finishes = np.delete(finishes, -1, axis=0)
+
+				
+				
 
 			else:
 				state = 4
@@ -59,6 +64,10 @@ def main():
 			new_finish = avoidObsCtrl.getDefinedFinish()
 			finishes = np.append(finishes, new_finish, axis=0)
 			print(state, finishes)
+
+
+		elif state == 3:
+			robot.stop()
 
 		elif state == 4:
 			robot.stop()

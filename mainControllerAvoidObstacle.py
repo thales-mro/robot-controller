@@ -7,7 +7,7 @@ import numpy as np
 from numpy.linalg import norm
 import time
 
-from avoidObstacleFuzzy import avoidObstacleFuzzyController
+from avoidObstacleFuzzy02 import avoidObstacleFuzzyController
 import matplotlib.pyplot as plt
 
 
@@ -32,20 +32,21 @@ def main():
 
 		r, theta = avoidObsCtrl.getInputValues(ir_distances)
 
-		detection_range = r[half-35:half+35]
+		detection_range = r[half-40:half+40]
 		min_dist = np.min(detection_range)
 
-		r1 = r[::11][:21][half_section-3:half_section+3]
-		r2 = r[::11][21:42][half_section-3:half_section+3]
-		r3 = r[::11][42:][half_section-3:half_section+3]
+		r1 = r[::11][:21]#[half_section-3:half_section+3]
+		#r2 = r[::11][21:42][half_section-3:half_section+3]
+		#r3 = r[::11][42:][half_section-3:half_section+3]
 
-		r_downsampled = np.concatenate((r1, r2, r3))
+		#r_downsampled = np.concatenate((r1, r2, r3))
+		r_downsampled = r1
 
 		if mode == 0:
 			if min_dist <= 1.0:
 				mode = 1
 				velLeft, velRight = avoidObsCtrl.getVelocities(r_downsampled)
-				print(velLeft, velRight)
+				print("mean", velLeft, velRight)
 				robot.set_left_velocity(velLeft)
 				robot.set_right_velocity(velRight)
 
@@ -56,14 +57,14 @@ def main():
 
 
 		elif mode == 1:
-			if min_dist >= 1.0:
+			if min_dist > 1.0:
 				mode = 0
 				robot.set_left_velocity(2.0)
 				robot.set_right_velocity(2.0)
 
 			else:
 				velLeft, velRight = avoidObsCtrl.getVelocities(r_downsampled)
-				print(velLeft, velRight)
+				print("mean", velLeft, velRight)
 				robot.set_left_velocity(velLeft)
 				robot.set_right_velocity(velRight)
 		
