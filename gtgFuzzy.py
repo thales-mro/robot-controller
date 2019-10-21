@@ -17,9 +17,9 @@ class gtgFuzzyController():
 		self.robot = robot
 		
 
-		deltaR = ctrl.Antecedent(np.arange(0, 50, 1), 'distance')
-		deltaA = ctrl.Antecedent(np.arange(0, 8, 1), 'angle variation')
-		velocity = ctrl.Consequent(np.arange(0, 6, 1), 'velocity')
+		deltaR = ctrl.Antecedent(np.arange(0, 50, 0.1), 'distance')
+		deltaA = ctrl.Antecedent(np.arange(0, 8, 0.1), 'angle variation')
+		velocity = ctrl.Consequent(np.arange(0, 6, 0.1), 'velocity')
 
 		deltaR['far'] = fuzz.trapmf(deltaR.universe, [3, 4, 50, 50])
 		deltaR['medium'] = fuzz.trapmf(deltaR.universe, [0.75, 2, 3, 4])
@@ -29,9 +29,9 @@ class gtgFuzzyController():
 		deltaA['medium'] = fuzz.trapmf(deltaA.universe, [np.pi/6, np.pi/4, 5*np.pi/12, 7*np.pi/12])
 		deltaA['low'] = fuzz.trapmf(deltaA.universe, [0, 0, np.pi/6, np.pi/4])
 
-		velocity['fast'] = fuzz.trapmf(velocity.universe, [3.5, 5, 5, 5])
-		velocity['normal'] = fuzz.trapmf(velocity.universe, [1.5, 2.5, 3.5, 4])
-		velocity['slow'] = fuzz.trapmf(velocity.universe, [0, 0, 1.5, 2])
+		velocity['fast'] = fuzz.trapmf(velocity.universe, [2.5, 3.0, 5.0, 5.0])
+		velocity['normal'] = fuzz.trapmf(velocity.universe, [1.0, 1.25, 2.5, 3.0])
+		velocity['slow'] = fuzz.trapmf(velocity.universe, [0, 0, 1.0, 1.25])
 
 
 		rule1 = ctrl.Rule(deltaR['far'] & (deltaA['high'] | deltaA['medium']), velocity['normal'])
@@ -90,7 +90,7 @@ class gtgFuzzyController():
 
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-90:half+90]
+			detection_range = r[half-100:half+100]
 			min_dist = np.min(detection_range)
 
 			robot_pos = np.array(self.robot.get_current_position())[:2]
@@ -99,7 +99,7 @@ class gtgFuzzyController():
 			errorDistance = np.sqrt((dx**2 + dy**2)) 
 
 			print(min_dist, errorDistance)
-			if min_dist >= 1.0 or (errorDistance <= 1.0 and final_target):
+			if min_dist >= 0.75 or (errorDistance <= 0.75 and final_target):
 				robot_angles = self.robot.get_current_orientation()
 				theta = robot_angles[2]
 

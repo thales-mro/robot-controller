@@ -8,6 +8,7 @@ import time
 
 from avoidObstacleFuzzy02 import avoidObstacleFuzzyController
 from gtgFuzzy import gtgFuzzyController
+from wallFollow import WallFollowController
 
 #### ---- Mapping of states ---- ####
 '''
@@ -25,6 +26,7 @@ def main():
 	finishes = np.array([[3.0, 2.5]])
 	avoidObsCtrl = avoidObstacleFuzzyController(robot)
 	gtgCtrl = gtgFuzzyController(robot)
+	wallFollowCtrl = WallFollowController(robot)
 
 
 	state = 0
@@ -39,6 +41,7 @@ def main():
 				finishes = np.delete(finishes, -1, axis=0)
 
 			print(state, finishes)
+
 		elif state == 1:
 			if len(finishes) > 0:
 
@@ -47,27 +50,35 @@ def main():
 
 					if state == 1:
 						finishes = np.delete(finishes, -1, axis=0)
-						
+
 				else:
 					state = gtgCtrl.run(finishes[-1], False)
 					finishes = np.delete(finishes, -1, axis=0)
-
-				
-				
 
 			else:
 				state = 4
 
 			print(state, finishes)
+
 		elif state == 2:
 			state = avoidObsCtrl.run()
-			new_finish = avoidObsCtrl.getDefinedFinish()
-			finishes = np.append(finishes, new_finish, axis=0)
+
+			if state == 1:
+				new_finish = avoidObsCtrl.getDefinedFinish()
+				finishes = np.append(finishes, new_finish, axis=0)
+			
+			robot.stop()
+			time.sleep(0.2)
 			print(state, finishes)
 
 
 		elif state == 3:
+			sensor_number = avoidObsCtrl.sensor_number
+			sensor_side = avoidObsCtrl.sensor_side
+			state = wallFollowCtrl.run(sensor_number, sensor_side)
+			print(state, finishes)
 			robot.stop()
+			time.sleep(0.2)
 
 		elif state == 4:
 			robot.stop()

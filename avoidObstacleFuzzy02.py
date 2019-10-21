@@ -13,6 +13,8 @@ class avoidObstacleFuzzyController():
 		self.defined_finish = None
 		self.velCtrlLeftWheel = []
 		self.velCtrlRightWheel = []
+		self.sensor_side = None
+		self.sensor_number = None
 
 		
 		velocityRight = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity right')
@@ -45,11 +47,11 @@ class avoidObstacleFuzzyController():
 
 
 			rule01_left = ctrl.Rule(beacon['far'], velocityLeft['very fast'])
-			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['medium'])
+			rule02_left = ctrl.Rule(beacon['medium'], velocityLeft['fast'])
 			rule03_left = ctrl.Rule(beacon['close'], velocityLeft['very slow'])
 
 			rule01_right = ctrl.Rule(beacon['far'], velocityRight['very slow'])
-			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['medium'])
+			rule02_right = ctrl.Rule(beacon['medium'], velocityRight['slow'])
 			rule03_right = ctrl.Rule(beacon['close'], velocityRight['very fast'])
 
 			velLeftCtrl = ctrl.ControlSystem([rule01_left, rule02_left, rule03_left])
@@ -113,7 +115,7 @@ class avoidObstacleFuzzyController():
 
 		half = 684//2
 		half_section = 21//2
-		threshold = np.pi ## CHANGE
+		threshold = 4*np.pi/9 
 		
 		if(self.robot.get_connection_status() != -1):
 			angle_ref = np.array(self.robot.get_current_orientation())[-1]
@@ -126,10 +128,10 @@ class avoidObstacleFuzzyController():
 
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-90:half+90]
+			detection_range = r[half-100:half+100]
 			min_dist = np.min(detection_range)
 
-			if min_dist <= 1.0:
+			if min_dist <= 0.75:
 				r1 = r[::11][:21]#[half_section-7:half_section+7]
 				#r2 = r[::11][21:42][half_section-7:half_section+7]
 				#r3 = r[::11][42:][half_section-7:half_section+7]
@@ -139,7 +141,7 @@ class avoidObstacleFuzzyController():
 
 				
 				velLeft, velRight = self.getVelocities(r_downsampled)
-				#print(velLeft, velRight)
+				print(velLeft, velRight)
 				self.robot.set_left_velocity(velLeft)
 				self.robot.set_right_velocity(velRight)
 
@@ -148,11 +150,31 @@ class avoidObstacleFuzzyController():
 				actual_pos = np.array(self.robot.get_current_position())[:2]
 
 				r = 0.7
-				dtheta = abs(angle_final - angle_ref)
+
+				if angle_ref <= -np.pi/2 and angle_final >= np.pi/2: 
+					dtheta = angle_ref - angle_final + 2*np.pi
+					self.sensor_side = "left"
+					self.sensor_number = 0
+
+				elif angle_final <= -np.pi/2 and angle_ref >= np.pi/2: 
+					dtheta = angle_final - angle_ref + 2*np.pi
+					self.sensor_side = "right"
+					self.sensor_number = 8
+
+				else:
+					dtheta = abs(angle_final - angle_ref)
+
+					if angle_final > angle_ref:
+						self.sensor_side = "right"
+						self.sensor_number = 7
+					else:
+						self.sensor_side = "left"
+						self.sensor_number = 0
+
 
 				self.defined_finish = np.array([[r*np.cos(angle_final) + actual_pos[0], r*np.sin(angle_final) + actual_pos[1]]])
 				
-
+				print("dtheta", dtheta)
 				if dtheta < threshold:
 					return 1
 				else:
