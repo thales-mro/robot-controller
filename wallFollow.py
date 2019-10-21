@@ -14,6 +14,12 @@ class WallFollowController():
         self.integral_error = 0.0
         self.last_step_error = 0.0
 
+    def reset_integral_error(self):
+        """
+        It zeroes integral error (it can be used for control re-execution)
+        """
+        self.integral_error = 0.0
+
     def p_control(self, sensor_distance, direction='right'):
         """
         It performs proportional control for wall following behavior
