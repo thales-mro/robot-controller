@@ -182,7 +182,7 @@ class WallFollowController():
 
             min_dist = np.min(detection_range)
 
-            if min_dist >= 0.75:
+            if min_dist >= 0.80:
                 dist = self.robot.read_ultrassonic_sensors()
                 velocities = self.control(dist[sensor_number], sensor_side)
                 self.robot.set_left_velocity(velocities[0])

@@ -90,7 +90,7 @@ class gtgFuzzyController():
 
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-100:half+100]
+			detection_range = r[half-40:half+40]
 			min_dist = np.min(detection_range)
 
 			robot_pos = np.array(self.robot.get_current_position())[:2]
@@ -99,7 +99,7 @@ class gtgFuzzyController():
 			errorDistance = np.sqrt((dx**2 + dy**2)) 
 
 			print(min_dist, errorDistance)
-			if min_dist >= 0.75 or (errorDistance <= 0.75 and final_target):
+			if min_dist >= 0.80 or (errorDistance <= 0.80 and final_target):
 				robot_angles = self.robot.get_current_orientation()
 				theta = robot_angles[2]
 

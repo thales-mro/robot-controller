@@ -3,6 +3,9 @@ from numpy.linalg import norm
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
+import scipy.stats
+import time
+
 
 
 class avoidObstacleFuzzyController():
@@ -15,28 +18,33 @@ class avoidObstacleFuzzyController():
 		self.velCtrlRightWheel = []
 		self.sensor_side = None
 		self.sensor_number = None
+		#self.velocity_weights = np.exp(-1*np.arange(0.01, 3.43, 0.01)[:-1][::-1])
+		self.velocity_weights = scipy.stats.norm(242.5, 90.0).pdf(range(342))
+		self.sum_of_weights = np.sum(self.velocity_weights)
+		print(self.velocity_weights)
 
 		
-		velocityRight = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity right')
-		velocityLeft = ctrl.Consequent(np.arange(0, 5, 0.1), 'velocity left')
+		velocityRight = ctrl.Consequent(np.arange(0, 5.5, 0.1), 'velocity right')
+		velocityLeft = ctrl.Consequent(np.arange(0, 5.5, 0.1), 'velocity left')
 
-		velocityRight['very slow'] = fuzz.trimf(velocityRight.universe, [0.0, 0.0, 0.8])
-		velocityRight['slow'] = fuzz.trimf(velocityRight.universe, [0.5, 1.0, 1.5])
-		velocityRight['medium'] = fuzz.trimf(velocityRight.universe, [1.2, 2.0, 2.5])
-		velocityRight['fast'] = fuzz.trimf(velocityRight.universe, [2.1, 3.0, 3.5])
-		velocityRight['very fast'] = fuzz.trimf(velocityRight.universe, [3.1, 4.0, 4.0])
+		velocityRight['very slow'] = fuzz.trimf(velocityRight.universe, [0.0, 0.0, 1.0])
+		velocityRight['slow'] = fuzz.trimf(velocityRight.universe, [0.8, 1.5, 2.2])
+		velocityRight['medium'] = fuzz.trimf(velocityRight.universe, [2.0, 2.7, 3.4])
+		velocityRight['fast'] = fuzz.trimf(velocityRight.universe, [3.2, 3.9, 4.6])
+		velocityRight['very fast'] = fuzz.trimf(velocityRight.universe, [4.4, 5.1, 5.1])
 
 		
 
-		velocityLeft['very slow'] = fuzz.trimf(velocityLeft.universe, [0.0, 0.0, 0.8])
-		velocityLeft['slow'] = fuzz.trimf(velocityLeft.universe, [0.5, 1.0, 1.5])
-		velocityLeft['medium'] = fuzz.trimf(velocityLeft.universe, [1.2, 2.0, 2.5])
-		velocityLeft['fast'] = fuzz.trimf(velocityLeft.universe, [2.1, 3.0, 3.5])
-		velocityLeft['very fast'] = fuzz.trimf(velocityLeft.universe, [3.1, 4.0, 4.0])
+		velocityLeft['very slow'] = fuzz.trimf(velocityLeft.universe, [0.0, 0.0, 1.0])
+		velocityLeft['slow'] = fuzz.trimf(velocityLeft.universe, [0.8, 1.5, 2.2])
+		velocityLeft['medium'] = fuzz.trimf(velocityLeft.universe, [2.0, 2.7, 3.4])
+		velocityLeft['fast'] = fuzz.trimf(velocityLeft.universe, [3.2, 3.9, 4.6])
+		velocityLeft['very fast'] = fuzz.trimf(velocityLeft.universe, [4.4, 5.1, 5.1])
 
 		# East Sector
 		#section_split = 63//3
-		self.section_split = 21
+		#self.section_split = 21
+		self.section_split = 684//2
 
 		for beacon_number in range(0, self.section_split):
 			beacon = ctrl.Antecedent(np.arange(0, 7, 0.1), ('distance_beacon%d' % beacon_number))
@@ -61,6 +69,8 @@ class avoidObstacleFuzzyController():
 			self.velCtrlRightWheel.append(ctrl.ControlSystemSimulation(velRightCtrl))
 
 		
+
+		
 		
 
 		
@@ -81,13 +91,16 @@ class avoidObstacleFuzzyController():
 			vl = self.velCtrlLeftWheel[beacon_number].output['velocity left']
 			vr = self.velCtrlRightWheel[beacon_number].output['velocity right']
 
-			left_velocity += self.velCtrlLeftWheel[beacon_number].output['velocity left']
-			right_velocity += self.velCtrlRightWheel[beacon_number].output['velocity right']
+			left_velocity += vl*self.velocity_weights[beacon_number]
+			right_velocity += vr*self.velocity_weights[beacon_number]
 			
 
 		
-		mean_letf_velocity = left_velocity/self.section_split
-		mean_right_velocity = right_velocity/self.section_split
+		mean_letf_velocity = left_velocity/self.sum_of_weights
+		mean_right_velocity = right_velocity/self.sum_of_weights
+
+		#mean_letf_velocity = left_velocity/self.section_split
+		#mean_right_velocity = right_velocity/self.section_split
 
 		
 		return mean_letf_velocity, mean_right_velocity
@@ -115,7 +128,7 @@ class avoidObstacleFuzzyController():
 
 		half = 684//2
 		half_section = 21//2
-		threshold = 4*np.pi/9 
+		threshold = np.pi/3 
 		
 		if(self.robot.get_connection_status() != -1):
 			angle_ref = np.array(self.robot.get_current_orientation())[-1]
@@ -128,11 +141,12 @@ class avoidObstacleFuzzyController():
 
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-100:half+100]
+			detection_range = r[half-40:half+40]
 			min_dist = np.min(detection_range)
 
-			if min_dist <= 0.75:
-				r1 = r[::11][:21]#[half_section-7:half_section+7]
+			if min_dist <= 0.80:
+				r1 = r[:half]	
+				#r1 = r[::11][:21]#[half_section-7:half_section+7]
 				#r2 = r[::11][21:42][half_section-7:half_section+7]
 				#r3 = r[::11][42:][half_section-7:half_section+7]
 
@@ -144,6 +158,7 @@ class avoidObstacleFuzzyController():
 				print(velLeft, velRight)
 				self.robot.set_left_velocity(velLeft)
 				self.robot.set_right_velocity(velRight)
+				time.sleep(0.1)
 
 			else:
 				angle_final = np.array(self.robot.get_current_orientation())[-1]

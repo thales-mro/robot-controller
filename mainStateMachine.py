@@ -40,6 +40,8 @@ def main():
 			if state == 1:
 				finishes = np.delete(finishes, -1, axis=0)
 
+			robot.stop()
+			time.sleep(0.1)
 			print(state, finishes)
 
 		elif state == 1:
@@ -58,6 +60,8 @@ def main():
 			else:
 				state = 4
 
+			robot.stop()
+			time.sleep(0.1)
 			print(state, finishes)
 
 		elif state == 2:
@@ -68,8 +72,9 @@ def main():
 				finishes = np.append(finishes, new_finish, axis=0)
 			
 			robot.stop()
-			time.sleep(0.2)
+			time.sleep(0.1)
 			print(state, finishes)
+
 
 
 		elif state == 3:
@@ -78,7 +83,8 @@ def main():
 			state = wallFollowCtrl.run(sensor_number, sensor_side)
 			print(state, finishes)
 			robot.stop()
-			time.sleep(0.2)
+			time.sleep(0.1)
+			
 
 		elif state == 4:
 			robot.stop()
