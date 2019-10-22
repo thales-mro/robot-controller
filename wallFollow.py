@@ -19,6 +19,7 @@ class WallFollowController():
         self.reference = 0.30 # in centimeters
         self.integral_error = 0.0
         self.last_step_error = 0.0
+        self.robot = robot
 
 
     def reset_integral_error(self):
@@ -149,7 +150,20 @@ class WallFollowController():
 
     ## Function made by Gabriel only in the feature/State_machine branch 
     def getInputValues(self, vecs):
-        
+        '''
+        It returns the distance that each beacon of laser sensor captured.
+        Since neither all the beacons returns a position of an obstacle 
+        (beacons that did not detect anything did not return any position)
+        we need to set as 5.0 to the beacon that did not detect anything and
+        the distance of obstacle to the beacons that detect it. So we cross 
+        the information between the position detected by a beacon and its angle
+        and then we can assign or the distance of the object (if detected) or 5.0
+        (if not detected)
+
+        Keyword:
+        vecs -- vector of the positions of obstacles detected by the beacons
+
+        '''
         stored_angles = self.getStoredAngles()
         inputToSystem = np.array([5.0]*len(stored_angles))
 
@@ -166,7 +180,23 @@ class WallFollowController():
     ## Function made by Gabriel only in the feature/State_machine branch 
     def run(self, sensor_number, sensor_side):
 
+        '''
+        It performs Wall Follow. It ends when or the distance of the tracked 
+        sensor returns a distances greater then 5.0 or if the robot founds
+        an obstacle in front of it. 
+
+        Keywords arguments:
+        sensor_number -- Index of the sensor that is tracked by the code.
+                         It is 0 if the left side is being tracked or 7 
+                         if the right side is being tracked. 
+
+        sensor_side -- side of the robot that is being tracked. It can be
+                       "left" or "right"
+        '''
+
         half = 684//2
+        self.reset_integral_error()
+        
         while self.robot.get_connection_status() != -1:
 
 
@@ -175,6 +205,10 @@ class WallFollowController():
 
             r, theta = self.getInputValues(ir_distances)
 
+            # Get the detection range in front of the robot. 
+            # If "right" is being tracked then we need to check only the 
+            # left side since we know that there is a wall in the right side.
+            # The same idea is apllied to the left side.
             if sensor_side == "right":
                 detection_range = r[half:half+10]
             elif sensor_side == "left":
@@ -184,7 +218,7 @@ class WallFollowController():
 
             if min_dist >= 0.80:
                 dist = self.robot.read_ultrassonic_sensors()
-                velocities = self.control(dist[sensor_number], sensor_side)
+                velocities = self.pid_control(dist[sensor_number], sensor_side)
                 self.robot.set_left_velocity(velocities[0])
                 self.robot.set_right_velocity(velocities[1])
                 if dist[sensor_number] >= 5.0:

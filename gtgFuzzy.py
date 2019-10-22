@@ -5,18 +5,19 @@ from numpy.linalg import norm
 import time
 
 
-
-
-
-#def main():
-
 class gtgFuzzyController():
 
 	def __init__(self, robot):
 
 		self.robot = robot
 		
+		'''
+		Definition of the Fuzzy System to GoToGoal. We define as consequent 
+		'deltaR' as the distance to the goal and 'deltaA' as the angle of the
+		robot related to the straight line that joins the final target and 
+		currently position of teh robot
 
+		'''
 		deltaR = ctrl.Antecedent(np.arange(0, 50, 0.1), 'distance')
 		deltaA = ctrl.Antecedent(np.arange(0, 8, 0.1), 'angle variation')
 		velocity = ctrl.Consequent(np.arange(0, 6, 0.1), 'velocity')
@@ -34,6 +35,7 @@ class gtgFuzzyController():
 		velocity['slow'] = fuzz.trapmf(velocity.universe, [0, 0, 1.0, 1.25])
 
 
+		# Definiton of rueles
 		rule1 = ctrl.Rule(deltaR['far'] & (deltaA['high'] | deltaA['medium']), velocity['normal'])
 		rule2 = ctrl.Rule(deltaR['far'] & deltaA['low'], velocity['fast'])
 
@@ -62,7 +64,20 @@ class gtgFuzzyController():
 		return np.load("stored_angles.npy")
 
 	def getInputValues(self, vecs):
-		
+		'''
+        It returns the distance that each beacon of laser sensor captured.
+        Since neither all the beacons returns a position of an obstacle 
+        (beacons that did not detect anything did not return any position)
+        we need to set as 5.0 to the beacon that did not detect anything and
+        the distance of obstacle to the beacons that detect it. So we cross 
+        the information between the position detected by a beacon and its angle
+        and then we can assign or the distance of the object (if detected) or 5.0
+        (if not detected)
+
+        Keyword:
+        vecs -- vector of the positions of obstacles detected by the beacons
+
+        '''
 		stored_angles = self.getStoredAngles()
 		inputToSystem = np.array([5.0]*len(stored_angles))
 
@@ -85,12 +100,15 @@ class gtgFuzzyController():
 
 		while(self.robot.get_connection_status() != -1):
 
+			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
+			# Get distances for all of the 684 associated beacons
 			r, theta = self.getInputValues(ir_distances)
 
-			detection_range = r[half-40:half+40]
+			# Range of the beacons used to detect if there is something in front of the robot
+			detection_range = r[half-55:half+55]
 			min_dist = np.min(detection_range)
 
 			robot_pos = np.array(self.robot.get_current_position())[:2]
@@ -98,12 +116,12 @@ class gtgFuzzyController():
 			dx, dy = self.finish - robot_pos
 			errorDistance = np.sqrt((dx**2 + dy**2)) 
 
-			print(min_dist, errorDistance)
+			# If there is nothing in front of the robot, it calculates the velocity based on fuzzy system
+			# The second argument of the "or" is: if the distance to the target is closer than the obstacle
+			# then the robot keeps going until reach the target.
 			if min_dist >= 0.80 or (errorDistance <= 0.80 and final_target):
 				robot_angles = self.robot.get_current_orientation()
 				theta = robot_angles[2]
-
-				
 
 				dx, dy = self.finish - robot_pos
 				alpha = np.arctan(dy/dx)
@@ -126,7 +144,7 @@ class gtgFuzzyController():
 				#print(errorAngle, errorDistance)
 				vel = self.computeVelocity(errorDistance, errorAngle)
 				
-
+				# If the error angle is very low, then the vlelocity in both wheels are the same.
 				if abs(errorAngle) <= 0.1:
 					self.robot.set_left_velocity(vel)
 					self.robot.set_right_velocity(vel)
@@ -136,6 +154,7 @@ class gtgFuzzyController():
 					self.robot.set_right_velocity(0.0)
 					return 1
 
+				# Adjust the velocity of a wheel based on the error angle. 
 				elif errorAngle < 0:
 					self.robot.set_left_velocity(0.0)
 					self.robot.set_right_velocity(vel)

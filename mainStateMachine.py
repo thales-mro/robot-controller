@@ -22,16 +22,38 @@ from wallFollow import WallFollowController
 #####################################
 def main():
 
-	robot = Robot()
-	finishes = np.array([[3.0, 2.5]])
+	
+	robot = Robot() # Instantiates a robot that will be used along all the algorithm 
+	finishes = np.array([[3.0, 2.5]]) # Define a finish point
+
+	# ----- Instantiates each beahavior separately ---- #
 	avoidObsCtrl = avoidObstacleFuzzyController(robot)
 	gtgCtrl = gtgFuzzyController(robot)
 	wallFollowCtrl = WallFollowController(robot)
+	# ------------------------------------------------- #
 
+	'''
+	So far, the state machine has 4 states:
+		state 0: the initial state. It is basically a start in GoToGoal.
 
+		state 1: GoToGoal. Before being executed, the finishes list is verified.
+				 The finishes list holds all the finish points, since after AvoidObstacle
+				 being performed, a new provisory goal is set to be achieved by the robot
+				 in order to avoid a collision.
+
+		state 2: Avoid Obstacle. After being executed, it adds a new goal in the finishes list.
+				 Within this code, we have a threshold to check how much the robot turned in order
+				 to see if the robot is avoiding an obstacle or a wall. If it is avoiding an obstacle
+				 then the WallFollow state is returned and the parameters of the side and sensor are
+				 set in WallFollow state.
+
+		state 3: WallFollow. It performs the WallFollow given the paramters obtained in state 2.
+
+		state 4: Final State. It is achieved after the robot arrived in the end point set iniatilly.
+	'''
 	state = 0
 	while state != 4:
-		#print(state)
+		
 		# this first 'if' is only used to map the first state
 		# it's redundat and a dummy one, only used as start point
 		if state == 0:
@@ -42,8 +64,7 @@ def main():
 
 			robot.stop()
 			time.sleep(0.1)
-			print(state, finishes)
-
+			
 		elif state == 1:
 			if len(finishes) > 0:
 
@@ -62,7 +83,7 @@ def main():
 
 			robot.stop()
 			time.sleep(0.1)
-			print(state, finishes)
+			
 
 		elif state == 2:
 			state = avoidObsCtrl.run()
@@ -73,7 +94,7 @@ def main():
 			
 			robot.stop()
 			time.sleep(0.1)
-			print(state, finishes)
+			
 
 
 
@@ -81,7 +102,7 @@ def main():
 			sensor_number = avoidObsCtrl.sensor_number
 			sensor_side = avoidObsCtrl.sensor_side
 			state = wallFollowCtrl.run(sensor_number, sensor_side)
-			print(state, finishes)
+			
 			robot.stop()
 			time.sleep(0.1)
 			
