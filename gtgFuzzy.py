@@ -7,9 +7,10 @@ import time
 
 class gtgFuzzyController():
 
-	def __init__(self, robot):
+	def __init__(self, robot, odometry):
 
 		self.robot = robot
+		self.odometry = odometry
 		
 		'''
 		Definition of the Fuzzy System to GoToGoal. We define as consequent 
@@ -99,7 +100,8 @@ class gtgFuzzyController():
 		half_section = 21//2
 
 		while(self.robot.get_connection_status() != -1):
-
+			self.odometry.calculate_odometry()
+			print("Pose: ", self.odometry.get_pose())
 			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
@@ -111,7 +113,7 @@ class gtgFuzzyController():
 			detection_range = r[half-55:half+55]
 			min_dist = np.min(detection_range)
 
-			robot_pos = np.array(self.robot.get_current_position())[:2]
+			robot_pos = self.odometry.get_pose()[:2]
 
 			dx, dy = self.finish - robot_pos
 			errorDistance = np.sqrt((dx**2 + dy**2)) 
@@ -120,8 +122,7 @@ class gtgFuzzyController():
 			# The second argument of the "or" is: if the distance to the target is closer than the obstacle
 			# then the robot keeps going until reach the target.
 			if min_dist >= 0.80 or (errorDistance <= 0.80 and final_target):
-				robot_angles = self.robot.get_current_orientation()
-				theta = robot_angles[2]
+				theta = self.odometry.get_pose()[2]
 
 				dx, dy = self.finish - robot_pos
 				alpha = np.arctan(dy/dx)

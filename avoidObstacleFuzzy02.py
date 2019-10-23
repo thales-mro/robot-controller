@@ -11,8 +11,9 @@ import time
 class avoidObstacleFuzzyController():
 
 
-	def __init__(self, robot):
+	def __init__(self, robot, odometry):
 		self.robot = robot
+		self.odometry = odometry
 		self.defined_finish = None
 		self.velCtrlLeftWheel = []
 		self.velCtrlRightWheel = []
@@ -155,10 +156,10 @@ class avoidObstacleFuzzyController():
 		threshold = np.pi/3 
 		
 		if(self.robot.get_connection_status() != -1):
-			angle_ref = np.array(self.robot.get_current_orientation())[-1]
+			angle_ref = self.odometry.get_pose[-1]
 
 		while(self.robot.get_connection_status() != -1):
-
+			self.odometry.calculate_odometry()
 			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
@@ -174,16 +175,15 @@ class avoidObstacleFuzzyController():
 				r1 = r[:half]	
 				r_downsampled = r1
 
-				
 				velLeft, velRight = self.getVelocities(r_downsampled)
 				print(velLeft, velRight)
 				self.robot.set_left_velocity(velLeft)
 				self.robot.set_right_velocity(velRight)
 				time.sleep(0.1)
 
-			else: # After change the orientation, a new provisory goal is set. 
-				angle_final = np.array(self.robot.get_current_orientation())[-1]
-				actual_pos = np.array(self.robot.get_current_position())[:2]
+			else: # After change the orientation, a new provisory goal is set.
+				angle_final = self.odometry.get_pose()[-1]
+				actual_pos = self.odometry.get_pose()[:2]
 
 				r = 1.5
 

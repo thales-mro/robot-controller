@@ -9,6 +9,7 @@ import time
 from avoidObstacleFuzzy02 import avoidObstacleFuzzyController
 from gtgFuzzy import gtgFuzzyController
 from wallFollow import WallFollowController
+from odometry import Odometry
 
 #### ---- Mapping of states ---- ####
 '''
@@ -23,11 +24,16 @@ def main():
 
 	robot = Robot() # Instantiates a robot that will be used along all the algorithm
 	finishes = np.array([[3.0, 2.5]]) # Define a finish point
+	
+	x, y = robot.get_current_position()[0:2]
+	orientation = robot.get_current_orientation()[2]
+	odom = Odometry(robot, x, y, orientation, mode=0)
+	print(odom.get_pose())
 
 	# ----- Instantiates each beahavior separately ---- #
-	avoidObsCtrl = avoidObstacleFuzzyController(robot)
-	gtgCtrl = gtgFuzzyController(robot)
-	wallFollowCtrl = WallFollowController(robot)
+	avoidObsCtrl = avoidObstacleFuzzyController(robot, odom)
+	gtgCtrl = gtgFuzzyController(robot, odom)
+	wallFollowCtrl = WallFollowController(robot, odom)
 	# ------------------------------------------------- #
 
 	'''

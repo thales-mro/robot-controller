@@ -9,7 +9,7 @@ class WallFollowController():
     It assumes the wall to be followed is at its right or left.
     """
 
-    def __init__(self, robot):
+    def __init__(self, robot, odometry):
         self.left_wheel_speed = 1.5 # medium base speed for wheels
         self.right_wheel_speed = 1.5
 
@@ -20,7 +20,7 @@ class WallFollowController():
         self.integral_error = 0.0
         self.last_step_error = 0.0
         self.robot = robot
-
+        self.odometry = odometry
 
     def reset_integral_error(self):
         """
@@ -198,7 +198,7 @@ class WallFollowController():
         self.reset_integral_error()
         
         while self.robot.get_connection_status() != -1:
-
+            self.odometry.calculate_odometry()
 
             ir_distances = self.robot.read_laser()
             ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
