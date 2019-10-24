@@ -101,7 +101,6 @@ class gtgFuzzyController():
 
 		while(self.robot.get_connection_status() != -1):
 			self.odometry.calculate_odometry()
-			print("Pose: ", self.odometry.get_pose())
 			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]

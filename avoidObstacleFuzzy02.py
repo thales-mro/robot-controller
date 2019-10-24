@@ -156,7 +156,7 @@ class avoidObstacleFuzzyController():
 		threshold = np.pi/3 
 		
 		if(self.robot.get_connection_status() != -1):
-			angle_ref = self.odometry.get_pose[-1]
+			angle_ref = self.odometry.get_pose()[-1]
 
 		while(self.robot.get_connection_status() != -1):
 			self.odometry.calculate_odometry()
@@ -176,7 +176,7 @@ class avoidObstacleFuzzyController():
 				r_downsampled = r1
 
 				velLeft, velRight = self.getVelocities(r_downsampled)
-				print(velLeft, velRight)
+				# print(velLeft, velRight)
 				self.robot.set_left_velocity(velLeft)
 				self.robot.set_right_velocity(velRight)
 				time.sleep(0.1)

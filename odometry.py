@@ -7,20 +7,10 @@ from numpy.linalg import norm
 import matplotlib.pyplot as plt
 import time
 import vrep
-import argparse
-
-parser = argparse.ArgumentParser()
-arg = parser.add_argument
-
-arg('--mode', type=int)
-arg('--circuit', type=int)
-arg('--filtering', type=bool)
-
-args = parser.parse_args()
 
 # Select the Mode, Circuit and Filtering
 # Mode can be 1, 2 or 3 (encoders, gyroscope or fusion)
-MODE = 3#int(args.mode)
+MODE = 2#int(args.mode)
 # 0 or 1. A boolean value. It is used to decide if we multiply or not the angle by a factor.
 FILTER = 0#bool(args.filtering)
 
@@ -36,6 +26,10 @@ class Odometry:
 		self.y = y
 		self.orientation = orientation
 		self.mode = mode
+		self.old_gyro_read = 0
+		# triggers streaming mode
+		res, gyroZ = vrep.simxGetFloatSignal(self.robot.clientID, "gyroZ", vrep.simx_opmode_streaming)
+
 
 	def get_pose(self):
 		"""
@@ -56,10 +50,13 @@ class Odometry:
 			angle0_right = self._get_right_encoder(self.robot)
 
 			# read theta variation from gyroscope
-			res, gyroZ = vrep.simxGetFloatSignal(self.robot.clientID, "gyroZ", vrep.simx_opmode_streaming)
-
-			# wait for a time to wheel turns a little bit
-			time.sleep(0.1)
+			valid = False
+			while(not valid):
+				res, gyroZ = vrep.simxGetFloatSignal(self.robot.clientID, "gyroZ", vrep.simx_opmode_buffer)
+				if res == 0 and gyroZ != self.old_gyro_read:
+					self.old_gyro_read = gyroZ
+					valid = True
+			#print("gyro results:", res, gyroZ)
 
 			# read final angles from each wheel
 			angle1_left = self._get_left_encoder(self.robot)
@@ -75,7 +72,7 @@ class Odometry:
 			if angle0_right > 0.0 and angle1_right < 0.0:
 				dtheta_right = (angle1_right + np.pi) + (np.pi - angle0_right)
 			else:
-				dtheta_right = abs(angle1_right - angle0_right) 
+				dtheta_right = abs(angle1_right - angle0_right)
 
 
 			# Performs the comparison statment to decide which mode and Filter state the
@@ -107,15 +104,16 @@ class Odometry:
 
 			# Set a threshold to avoid accumulate erros while robot is getting data
 			# for the odometry
-			if abs(dangle) < 0.01:
+			# (Thales edit) I left it commented here, but we probably won't need these lines anymore
+			'''if abs(dangle) < 0.01:
 				dangle = 0.0
-
+			
 			if dtheta_right < 0.01:
 				dtheta_right = 0.0
 
 			if dtheta_left < 0.01:
 				dtheta_left = 0.0
-
+			'''
 			# Get the x and y variations
 			ds = (self.robot.WHEEL_RADIUS*(dtheta_right + dtheta_left))/2
 
@@ -125,7 +123,6 @@ class Odometry:
 			self.x += dx
 			self.y += dy
 			self.orientation += dangle
-
 
 	# The two folloing fucntions are used to get the reading from the angle detetcion of the wheels. We treat them
 	# as encoders since they behave very similar to one enconder.

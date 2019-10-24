@@ -24,11 +24,10 @@ def main():
 
 	robot = Robot() # Instantiates a robot that will be used along all the algorithm
 	finishes = np.array([[3.0, 2.5]]) # Define a finish point
-	
+
 	x, y = robot.get_current_position()[0:2]
 	orientation = robot.get_current_orientation()[2]
-	odom = Odometry(robot, x, y, orientation, mode=0)
-	print(odom.get_pose())
+	odom = Odometry(robot, x, y, orientation, mode=1)
 
 	# ----- Instantiates each beahavior separately ---- #
 	avoidObsCtrl = avoidObstacleFuzzyController(robot, odom)
@@ -112,6 +111,7 @@ def main():
 			break
 
 	robot.stop()
+	print(robot.get_current_position(), odom.get_pose())
 	print("Done!")
 
 
