@@ -101,19 +101,6 @@ class Odometry:
 				else:
 					dangle = (gyroZ + dangle_encoder)/2 
 
-
-			# Set a threshold to avoid accumulate erros while robot is getting data
-			# for the odometry
-			# (Thales edit) I left it commented here, but we probably won't need these lines anymore
-			'''if abs(dangle) < 0.01:
-				dangle = 0.0
-			
-			if dtheta_right < 0.01:
-				dtheta_right = 0.0
-
-			if dtheta_left < 0.01:
-				dtheta_left = 0.0
-			'''
 			# Get the x and y variations
 			ds = (self.robot.WHEEL_RADIUS*(dtheta_right + dtheta_left))/2
 
