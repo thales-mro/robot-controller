@@ -9,6 +9,7 @@ import time
 from avoidObstacleFuzzy02 import avoidObstacleFuzzyController
 from gtgFuzzy import gtgFuzzyController
 from wallFollow import WallFollowController
+from odometry import Odometry
 
 #### ---- Mapping of states ---- ####
 '''
@@ -17,19 +18,21 @@ from wallFollow import WallFollowController
 2: Avoid Obstacle
 3: Wall Follow
 4: stop
-
 '''
 #####################################
 def main():
 
-	
-	robot = Robot() # Instantiates a robot that will be used along all the algorithm 
+	robot = Robot() # Instantiates a robot that will be used along all the algorithm
 	finishes = np.array([[3.0, 2.5]]) # Define a finish point
 
+	x, y = robot.get_current_position()[0:2]
+	orientation = robot.get_current_orientation()[2]
+	odom = Odometry(robot, x, y, orientation, mode=1)
+
 	# ----- Instantiates each beahavior separately ---- #
-	avoidObsCtrl = avoidObstacleFuzzyController(robot)
-	gtgCtrl = gtgFuzzyController(robot)
-	wallFollowCtrl = WallFollowController(robot)
+	avoidObsCtrl = avoidObstacleFuzzyController(robot, odom)
+	gtgCtrl = gtgFuzzyController(robot, odom)
+	wallFollowCtrl = WallFollowController(robot, odom)
 	# ------------------------------------------------- #
 
 	'''
@@ -53,7 +56,6 @@ def main():
 	'''
 	state = 0
 	while state != 4:
-		
 		# this first 'if' is only used to map the first state
 		# it's redundat and a dummy one, only used as start point
 		if state == 0:
@@ -64,7 +66,7 @@ def main():
 
 			robot.stop()
 			time.sleep(0.1)
-			
+
 		elif state == 1:
 			if len(finishes) > 0:
 
@@ -83,7 +85,7 @@ def main():
 
 			robot.stop()
 			time.sleep(0.1)
-			
+
 
 		elif state == 2:
 			state = avoidObsCtrl.run()
@@ -94,9 +96,6 @@ def main():
 			
 			robot.stop()
 			time.sleep(0.1)
-			
-
-
 
 		elif state == 3:
 			sensor_number = avoidObsCtrl.sensor_number
@@ -105,13 +104,14 @@ def main():
 			
 			robot.stop()
 			time.sleep(0.1)
-			
+
 
 		elif state == 4:
 			robot.stop()
 			break
 
 	robot.stop()
+	print(robot.get_current_position(), odom.get_pose())
 	print("Done!")
 
 
