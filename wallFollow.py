@@ -16,11 +16,14 @@ class WallFollowController():
         self.k_p = 2.0 # empirical value
         self.k_i = 0.0001 # empirical value
         self.k_d = 20 #empirical value
-        self.reference = 0.30 # in centimeters
+        self.reference = 0.30 # in meters
         self.integral_error = 0.0
         self.last_step_error = 0.0
         self.robot = robot
         self.odometry = odometry
+
+    def get_reference(self):
+        return self.reference
 
     def reset_integral_error(self):
         """
