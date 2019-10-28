@@ -181,7 +181,7 @@ class WallFollowController():
         return inputToSystem, stored_angles
 
     ## Function made by Gabriel only in the feature/State_machine branch 
-    def run(self, sensor_number, sensor_side):
+    def run(self, sensor_number, sensor_side, trajectory):
 
         '''
         It performs Wall Follow. It ends when or the distance of the tracked 
@@ -207,6 +207,9 @@ class WallFollowController():
             ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
             r, theta = self.getInputValues(ir_distances)
+            pos = np.array(self.robot.get_current_position()[:2])
+            #print(pos, "AvdObs")
+            trajectory.append(pos)
 
             # Get the detection range in front of the robot. 
             # If "right" is being tracked then we need to check only the 
@@ -226,9 +229,8 @@ class WallFollowController():
                 self.robot.set_right_velocity(velocities[1])
                 if dist[sensor_number] >= 5.0:
                     print(dist[sensor_number])
-                    return 1
+                    return 1, trajectory
                 time.sleep(0.1)
 
             else:
-                return 2
-
+                return 2, trajectory

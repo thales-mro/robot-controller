@@ -11,6 +11,7 @@ from gtgFuzzy import gtgFuzzyController
 from wallFollow import WallFollowController
 from odometry import Odometry
 
+import argparse
 #### ---- Mapping of states ---- ####
 '''
 0: Waiting for input -- dummy one
@@ -22,13 +23,21 @@ from odometry import Odometry
 #####################################
 def main():
 
+	parser = argparse.ArgumentParser()
+	arg = parser.add_argument
+	arg('--mode', required=True)
+	args = parser.parse_args()
+
+	mode = int(args.mode)
+
 	robot = Robot() # Instantiates a robot that will be used along all the algorithm
 	finishes = np.array([[3.0, 2.5]]) # Define a finish point
-
+	#finishes = np.array([[2.05, -1.175]]) 
 	x, y = robot.get_current_position()[0:2]
 	orientation = robot.get_current_orientation()[2]
-	odom = Odometry(robot, x, y, orientation, mode=1)
-
+	
+	odom = Odometry(robot, x, y, orientation, mode=mode)
+	trajectory = []
 	# ----- Instantiates each beahavior separately ---- #
 	avoidObsCtrl = avoidObstacleFuzzyController(robot, odom)
 	gtgCtrl = gtgFuzzyController(robot, odom)
@@ -59,59 +68,62 @@ def main():
 		# this first 'if' is only used to map the first state
 		# it's redundat and a dummy one, only used as start point
 		if state == 0:
-			state = gtgCtrl.run(finishes[-1], True)
+			state, trajectory = gtgCtrl.run(finishes[-1], True, trajectory)
 
 			if state == 1:
 				finishes = np.delete(finishes, -1, axis=0)
 
-			robot.stop()
-			time.sleep(0.1)
+			#robot.stop()
+			#time.sleep(0.1)
 
 		elif state == 1:
 			if len(finishes) > 0:
 
 				if len(finishes) == 1:
-					state = gtgCtrl.run(finishes[-1], True)
+					state, trajectory = gtgCtrl.run(finishes[-1], True, trajectory)
 
 					if state == 1:
 						finishes = np.delete(finishes, -1, axis=0)
 
 				else:
-					state = gtgCtrl.run(finishes[-1], False)
+					state, trajectory = gtgCtrl.run(finishes[-1], False, trajectory)
 					finishes = np.delete(finishes, -1, axis=0)
 
 			else:
 				state = 4
 
-			robot.stop()
-			time.sleep(0.1)
+			#robot.stop()
+			#time.sleep(0.1)
 
 
 		elif state == 2:
-			state = avoidObsCtrl.run()
+			state, trajectory = avoidObsCtrl.run(trajectory)
 
 			if state == 1:
 				new_finish = avoidObsCtrl.getDefinedFinish()
 				finishes = np.append(finishes, new_finish, axis=0)
 			
-			robot.stop()
-			time.sleep(0.1)
+			#robot.stop()
+			#time.sleep(0.1)
 
 		elif state == 3:
 			sensor_number = avoidObsCtrl.sensor_number
 			sensor_side = avoidObsCtrl.sensor_side
-			state = wallFollowCtrl.run(sensor_number, sensor_side)
+			state, trajectory = wallFollowCtrl.run(sensor_number, sensor_side, trajectory)
 			
-			robot.stop()
-			time.sleep(0.1)
+			#robot.stop()
+			#time.sleep(0.1)
 
 
 		elif state == 4:
 			robot.stop()
 			break
 
+		#print(finishes)
+
 	robot.stop()
-	print(robot.get_current_position(), odom.get_pose())
+	#print(robot.get_current_position(), odom.get_pose())
+	np.save("trajectory_performed_%d.npy" % mode, trajectory, fix_imports=False)
 	print("Done!")
 
 
