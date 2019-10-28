@@ -93,21 +93,28 @@ class gtgFuzzyController():
 		return inputToSystem, stored_angles
 
 
-	def run(self, finish, final_target):
+	def run(self, finish, final_target, trajectory):
 
 		self.finish = finish
 		half = 684//2
 		half_section = 21//2
 
+
+
 		while(self.robot.get_connection_status() != -1):
+			
 			self.odometry.calculate_odometry()
+			
 			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
 			# Get distances for all of the 684 associated beacons
 			r, theta = self.getInputValues(ir_distances)
-
+			
+			pos = np.array(self.robot.get_current_position())[:2]
+			
+			trajectory.append(pos)
 			# Range of the beacons used to detect if there is something in front of the robot
 			detection_range = r[half-55:half+55]
 			min_dist = np.min(detection_range)
@@ -116,7 +123,7 @@ class gtgFuzzyController():
 
 			dx, dy = self.finish - robot_pos
 			errorDistance = np.sqrt((dx**2 + dy**2)) 
-
+			#print(errorDistance, self.finish)
 			# If there is nothing in front of the robot, it calculates the velocity based on fuzzy system
 			# The second argument of the "or" is: if the distance to the target is closer than the obstacle
 			# then the robot keeps going until reach the target.
@@ -152,7 +159,7 @@ class gtgFuzzyController():
 				elif errorDistance <= 0.1:
 					self.robot.set_left_velocity(0.0)
 					self.robot.set_right_velocity(0.0)
-					return 1
+					return 1, trajectory
 
 				# Adjust the velocity of a wheel based on the error angle. 
 				elif errorAngle < 0:
@@ -166,7 +173,7 @@ class gtgFuzzyController():
 				time.sleep(0.1)
 
 			else:
-				return 2
+				return 2, trajectory
 
 
 

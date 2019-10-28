@@ -5,6 +5,7 @@ from skfuzzy import control as ctrl
 import matplotlib.pyplot as plt
 import scipy.stats
 import time
+import vrep
 
 
 
@@ -108,7 +109,8 @@ class avoidObstacleFuzzyController():
 			left_velocity += vl*self.velocity_weights[beacon_number]
 			right_velocity += vr*self.velocity_weights[beacon_number]
 			
-
+			if beacon_number % 97 == 0:
+				self.odometry.calculate_odometry()
 		
 		mean_letf_velocity = left_velocity/self.sum_of_weights
 		mean_right_velocity = right_velocity/self.sum_of_weights
@@ -149,7 +151,7 @@ class avoidObstacleFuzzyController():
 
 		return inputToSystem, stored_angles
 
-	def run(self):
+	def run(self, trajectory):
 
 		half = 684//2
 		half_section = 21//2
@@ -159,13 +161,18 @@ class avoidObstacleFuzzyController():
 			angle_ref = self.odometry.get_pose()[-1]
 
 		while(self.robot.get_connection_status() != -1):
-			self.odometry.calculate_odometry()
+			#self.odometry.calculate_odometry()
 			# Get sensor reading
 			ir_distances = self.robot.read_laser()
 			ir_distances = np.array(ir_distances).reshape(len(ir_distances)//3,3)[:684,:2]
 
 			# Get distances for all of the 684 associated beacons
 			r, theta = self.getInputValues(ir_distances)
+			
+
+			pos = np.array(self.robot.get_current_position())[:2]
+			
+			trajectory.append(pos)
 
 			# Range of the beacons used to detect if there is something in front of the robot
 			detection_range = r[half-55:half+55]
@@ -176,10 +183,11 @@ class avoidObstacleFuzzyController():
 				r_downsampled = r1
 
 				velLeft, velRight = self.getVelocities(r_downsampled)
-				# print(velLeft, velRight)
+
+				#print(velLeft, velRight)
 				self.robot.set_left_velocity(velLeft)
 				self.robot.set_right_velocity(velRight)
-				time.sleep(0.1)
+				#time.sleep(0.1)
 
 			else: # After change the orientation, a new provisory goal is set.
 				angle_final = self.odometry.get_pose()[-1]
@@ -212,11 +220,10 @@ class avoidObstacleFuzzyController():
 				# Setting new provisory goal
 				self.defined_finish = np.array([[r*np.cos(angle_final) + actual_pos[0], r*np.sin(angle_final) + actual_pos[1]]])
 				
-				print("dtheta", dtheta)
 				if dtheta < threshold:
-					return 1
+					return 1, trajectory
 				else:
-					return 3
+					return 3, trajectory
 
 
 	def getDefinedFinish(self):
@@ -233,6 +240,5 @@ class avoidObstacleFuzzyController():
 
 
 		
-
 
 
